@@ -5,10 +5,8 @@
   "description": "Image Stitcher AI with Gemini",
   "scripts": {
     "dev": "vite",
+    "build": "vite build",
     "build:frontend": "vite build",
-    "build:functions": "tsc --project tsconfig.functions.json",
-    "build:all": "npm run build:frontend && npm run build:functions",
-    "build": "npm run build:all",
     "preview": "vite preview"
   },
   "dependencies": {
