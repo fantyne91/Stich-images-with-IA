@@ -1,0 +1,5 @@
+{
+  "name": "Image Stitcher AI",
+  "description": "Upload two images and provide a prompt to have the Gemini AI stitch them together into a new, creative image.",
+  "requestFramePermissions": []
+}
