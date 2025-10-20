@@ -1,6 +1,7 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
 export const handler = async (event) => {
+  console.log("Raw event body:", event.body);
   // Handle CORS preflight
   if (event.httpMethod === "OPTIONS") {
     return {
