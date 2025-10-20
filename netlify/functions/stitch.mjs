@@ -55,9 +55,10 @@ export const handler = async (event) => {
       };
     }
 
-    console.log("Calling Gemini API...");
+    console.log("Calling Gemini 2.5 Flash Image API...");
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${API_KEY}`;
+    // Use Gemini 2.5 Flash Image for native image generation
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${API_KEY}`;
 
     const requestBody = {
       contents: [
@@ -76,17 +77,17 @@ export const handler = async (event) => {
               },
             },
             {
-              text: `Stitch these two images together. Image 1 is the primary context unless specified otherwise. Instruction: ${prompt}`,
+              text: `Combine and stitch these two images together following this instruction: ${prompt}. Create a seamless composition that blends both images naturally.`,
             },
           ],
         },
       ],
       generationConfig: {
-        temperature: 1,
+        temperature: 0.9,
         topK: 40,
         topP: 0.95,
         maxOutputTokens: 8192,
-        responseMimeType: "image/png",
+        response_modalities: ["IMAGE"],
       },
     };
 
@@ -114,7 +115,7 @@ export const handler = async (event) => {
     console.log("Gemini API response received");
     const data = await response.json();
 
-    // Try to extract image from response
+    // Extract image from response
     if (data.candidates && data.candidates[0] && data.candidates[0].content) {
       const parts = data.candidates[0].content.parts;
       for (const part of parts) {
