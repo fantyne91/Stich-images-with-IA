@@ -89,6 +89,8 @@ export const handler = async (event) => {
     });
 
     console.log("Gemini API response received");
+    console.log("Raw Gemini response:", JSON.stringify(response));
+
 
     for (const part of response.candidates?.[0]?.content?.parts || []) {
       if (part.inlineData?.data) {
