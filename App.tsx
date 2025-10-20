@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { UploadedImage } from './types';
 import { ImageUploader } from './components/ImageUploader';
@@ -31,7 +30,11 @@ const App: React.FC = () => {
       }
     } catch (e) {
       const err = e as Error;
-      setError(err.message);
+      if (err.message.includes("Failed to fetch")) {
+        setError("Could not connect to the server. The Netlify function may not be deployed correctly. Check the browser console for more details.");
+      } else {
+        setError(err.message);
+      }
     } finally {
       setIsLoading(false);
     }
