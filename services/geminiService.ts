@@ -93,7 +93,7 @@ const stitchImagesOnNetlify = async (image1File: File, image2File: File, prompt:
 export const stitchImages = async (image1File: File, image2File: File, prompt: string): Promise<string> => {
   try {
     // Check if API_KEY is available on the client-side (dev/preview environment)
-    if (process.env.API_KEY) {
+    if (typeof process !== 'undefined' && process.env.API_KEY) {
       console.log("Running in development/preview mode. Calling Gemini API directly.");
       return await stitchImagesLocally(image1File, image2File, prompt);
     } else {
