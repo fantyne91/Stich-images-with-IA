@@ -1,7 +1,5 @@
-
-
 export const handler = async (event) => {
-  console.log("Raw event body:", event.body);
+  // Handle CORS preflight
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
@@ -26,6 +24,7 @@ export const handler = async (event) => {
   }
 
   const API_KEY = process.env.API_KEY || process.env.GEMINI_API_KEY;
+
   if (!API_KEY) {
     console.error("API_KEY not found in environment variables");
     return {
@@ -42,6 +41,7 @@ export const handler = async (event) => {
 
   try {
     const { image1, image2, prompt } = JSON.parse(event.body || "{}");
+
     if (!image1 || !image2 || !prompt) {
       return {
         statusCode: 400,
@@ -55,65 +55,83 @@ export const handler = async (event) => {
       };
     }
 
-    // Ajusta este endpoint a la versión correcta de la API de Google GenAI que utilices
-    const MODEL = "gemini-2.5-flash-image";
-    const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta2/models/${MODEL}:generate`;
+    console.log("Calling Gemini API...");
 
-    const fetchBody = {
-      // Estructura de ejemplo; adapta campos si tu endpoint requiere nombres distintos
-      contents: {
-        parts: [
-          { inlineData: { data: image1.base64, mimeType: image1.mimeType } },
-          { inlineData: { data: image2.base64, mimeType: image2.mimeType } },
-          {
-            text: `Stitch these two images together. Image 1 is the primary context. Instruction: ${prompt}`,
-          },
-        ],
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${API_KEY}`;
+
+    const requestBody = {
+      contents: [
+        {
+          parts: [
+            {
+              inline_data: {
+                mime_type: image1.mimeType,
+                data: image1.base64,
+              },
+            },
+            {
+              inline_data: {
+                mime_type: image2.mimeType,
+                data: image2.base64,
+              },
+            },
+            {
+              text: `Stitch these two images together. Image 1 is the primary context unless specified otherwise. Instruction: ${prompt}`,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        temperature: 1,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 8192,
+        responseMimeType: "image/png",
       },
-      // pide respuesta en modalidad imagen
-      config: { responseModalities: ["IMAGE"] },
     };
 
-    console.log("Calling Gemini REST endpoint...");
-    const apiResp = await fetch(ENDPOINT, {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(fetchBody),
+      body: JSON.stringify(requestBody),
     });
 
-    if (!apiResp.ok) {
-      const errText = await apiResp.text();
-      console.error("API error response:", apiResp.status, errText);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Gemini API error:", errorText);
       return {
-        statusCode: apiResp.status,
+        statusCode: response.status,
         headers: {
           "Access-Control-Allow-Origin": "*",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ error: `Remote API error: ${errText}` }),
+        body: JSON.stringify({ error: `Gemini API error: ${errorText}` }),
       };
     }
 
-    const json = await apiResp.json();
-    console.log("Gemini REST response:", JSON.stringify(json));
+    console.log("Gemini API response received");
+    const data = await response.json();
 
-    // Buscar la parte con inlineData (ejemplo basado en la estructura que entrega la librería)
-    for (const part of json.candidates?.[0]?.content?.parts || []) {
-      if (part.inlineData?.data) {
-        const mimeType = part.inlineData.mimeType;
-        const base64ImageBytes = part.inlineData.data;
-        const imageUrl = `data:${mimeType};base64,${base64ImageBytes}`;
-        return {
-          statusCode: 200,
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ imageUrl }),
-        };
+    // Try to extract image from response
+    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+      const parts = data.candidates[0].content.parts;
+      for (const part of parts) {
+        if (part.inline_data && part.inline_data.data) {
+          const mimeType = part.inline_data.mime_type || "image/png";
+          const base64ImageBytes = part.inline_data.data;
+          const imageUrl = `data:${mimeType};base64,${base64ImageBytes}`;
+
+          return {
+            statusCode: 200,
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ imageUrl }),
+          };
+        }
       }
     }
 
