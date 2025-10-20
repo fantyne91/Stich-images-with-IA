@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { UploadedImage } from './types';
 import { ImageUploader } from './components/ImageUploader';
-import { LoadingSpinner, SparklesIcon, XIcon } from './components/icons';
+import { LoadingSpinner, SparklesIcon } from './components/icons';
 import { stitchImages } from './services/geminiService';
 
 const App: React.FC = () => {
@@ -30,11 +30,7 @@ const App: React.FC = () => {
       }
     } catch (e) {
       const err = e as Error;
-      if (err.message.includes("Failed to fetch")) {
-        setError("Could not connect to the server. The Netlify function may not be deployed correctly. Check the browser console for more details.");
-      } else {
-        setError(err.message);
-      }
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }

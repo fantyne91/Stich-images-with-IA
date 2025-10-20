@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "@netlify/functions": "^2.6.0",
-    "@types/node": "^20.12.12",
+    "@types/node": "^20.12.7",
     "typescript": "^5.4.5"
   }
 }
