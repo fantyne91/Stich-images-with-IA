@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { UploadedImage } from './types';
-import { ImageUploader } from './components/ImageUploader';
-import { LoadingSpinner, SparklesIcon } from './components/icons';
-import { stitchImages } from './services/geminiService';
+import { UploadedImage } from './types.ts';
+import { ImageUploader } from './components/ImageUploader.tsx';
+import { LoadingSpinner, SparklesIcon } from './components/icons.tsx';
+import { stitchImages } from './services/geminiService.ts';
 
 const App: React.FC = () => {
   const [image1, setImage1] = useState<UploadedImage | null>(null);

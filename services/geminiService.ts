@@ -1,4 +1,4 @@
-import { UploadedImage } from './types';
+import { UploadedImage } from '../types.ts';
 
 // Helper function to convert a File object to a base64 string
 const fileToBase64 = (file: File): Promise<string> => {

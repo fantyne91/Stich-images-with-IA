@@ -1,7 +1,6 @@
-
 import React, { useRef } from 'react';
-import { UploadedImage } from '../types';
-import { UploadIcon, XIcon } from './icons';
+import { UploadedImage } from '../types.ts';
+import { UploadIcon, XIcon } from './icons.tsx';
 
 interface ImageUploaderProps {
   image: UploadedImage | null;
