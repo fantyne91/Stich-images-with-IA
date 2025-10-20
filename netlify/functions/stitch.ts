@@ -60,7 +60,7 @@ const handler: Handler = async (event) => {
     });
 
     for (const part of response.candidates?.[0]?.content?.parts || []) {
-      if (part.inlineData) {
+      if (part.inlineData?.data) {
         const mimeType = part.inlineData.mimeType;
         const base64ImageBytes: string = part.inlineData.data;
         const imageUrl = `data:${mimeType};base64,${base64ImageBytes}`;
