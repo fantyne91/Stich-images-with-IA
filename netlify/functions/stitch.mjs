@@ -132,7 +132,7 @@ export const handler = async (event) => {
       },
       body: JSON.stringify({
         error: `Failed to stitch images: ${errorMessage}`,
-         stack: error.stack || "no stack trace",
+   
       }),
     };
   }
