@@ -1,8 +1,7 @@
-import { GoogleGenAI, Modality } from "@google/genai";
+
 
 export const handler = async (event) => {
   console.log("Raw event body:", event.body);
-  // Handle CORS preflight
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
@@ -27,7 +26,6 @@ export const handler = async (event) => {
   }
 
   const API_KEY = process.env.API_KEY || process.env.GEMINI_API_KEY;
-
   if (!API_KEY) {
     console.error("API_KEY not found in environment variables");
     return {
@@ -44,7 +42,6 @@ export const handler = async (event) => {
 
   try {
     const { image1, image2, prompt } = JSON.parse(event.body || "{}");
-
     if (!image1 || !image2 || !prompt) {
       return {
         statusCode: 400,
@@ -58,47 +55,57 @@ export const handler = async (event) => {
       };
     }
 
-    const ai = new GoogleGenAI({ apiKey: API_KEY });
+    // Ajusta este endpoint a la versión correcta de la API de Google GenAI que utilices
+    const MODEL = "gemini-2.5-flash-image";
+    const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta2/models/${MODEL}:generate`;
 
-    const image1Part = {
-      inlineData: {
-        data: image1.base64,
-        mimeType: image1.mimeType,
-      },
-    };
-
-    const image2Part = {
-      inlineData: {
-        data: image2.base64,
-        mimeType: image2.mimeType,
-      },
-    };
-
-    const textPart = {
-      text: `Stitch these two images together. Image 1 is the primary context unless specified otherwise. Instruction: ${prompt}`,
-    };
-
-    console.log("Calling Gemini API...");
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-image",
+    const fetchBody = {
+      // Estructura de ejemplo; adapta campos si tu endpoint requiere nombres distintos
       contents: {
-        parts: [image1Part, image2Part, textPart],
+        parts: [
+          { inlineData: { data: image1.base64, mimeType: image1.mimeType } },
+          { inlineData: { data: image2.base64, mimeType: image2.mimeType } },
+          {
+            text: `Stitch these two images together. Image 1 is the primary context. Instruction: ${prompt}`,
+          },
+        ],
       },
-      config: {
-        responseModalities: [Modality.IMAGE],
+      // pide respuesta en modalidad imagen
+      config: { responseModalities: ["IMAGE"] },
+    };
+
+    console.log("Calling Gemini REST endpoint...");
+    const apiResp = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify(fetchBody),
     });
 
-    console.log("Gemini API response received");
-    console.log("Raw Gemini response:", JSON.stringify(response));
+    if (!apiResp.ok) {
+      const errText = await apiResp.text();
+      console.error("API error response:", apiResp.status, errText);
+      return {
+        statusCode: apiResp.status,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ error: `Remote API error: ${errText}` }),
+      };
+    }
 
+    const json = await apiResp.json();
+    console.log("Gemini REST response:", JSON.stringify(json));
 
-    for (const part of response.candidates?.[0]?.content?.parts || []) {
+    // Buscar la parte con inlineData (ejemplo basado en la estructura que entrega la librería)
+    for (const part of json.candidates?.[0]?.content?.parts || []) {
       if (part.inlineData?.data) {
         const mimeType = part.inlineData.mimeType;
         const base64ImageBytes = part.inlineData.data;
         const imageUrl = `data:${mimeType};base64,${base64ImageBytes}`;
-
         return {
           statusCode: 200,
           headers: {
@@ -133,7 +140,6 @@ export const handler = async (event) => {
       },
       body: JSON.stringify({
         error: `Failed to stitch images: ${errorMessage}`,
-   
       }),
     };
   }
