@@ -1,8 +1,7 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import type { Handler } from '@netlify/functions';
 
-// This is the serverless function that will securely call the Gemini API
-const handler: Handler = async (event) => {
+export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -10,7 +9,7 @@ const handler: Handler = async (event) => {
     };
   }
 
-  const { API_KEY } = process.env;
+  const API_KEY = process.env.API_KEY || process.env.GEMINI_API_KEY;
 
   if (!API_KEY) {
     return {
@@ -86,5 +85,3 @@ const handler: Handler = async (event) => {
     };
   }
 };
-
-export { handler };
